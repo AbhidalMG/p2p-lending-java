@@ -1,5 +1,4 @@
 package com.p2p.domain;
-
 public class Loan {
     // Enum untuk status loan
     public enum Status {
@@ -23,7 +22,7 @@ public class Loan {
         return status;
     }
 
-     // =========================
+    // =========================
     // DOMAIN BEHAVIOR
     // =========================
     public void approve() {

@@ -37,4 +37,41 @@ BigDecimal amount = BigDecimal.valueOf(1000);
 assertThrows(IllegalArgumentException.class, () -> {
     loanService.createLoan(borrower, amount);
 }, "Harusnya melempar IllegalArgumentException karena borrower belum verified");
-}}
+}
+
+@Test
+void shouldRejectLoanWhenAmountIsZeroOrNegative() {
+    // 1. Arrange
+    // Borrower valid (Verified = true) agar tidak kena cegat di validasi pertama
+    Borrower borrower = new Borrower(true, 750); 
+    LoanService loanService = new LoanService();
+    
+    BigDecimal zeroAmount = BigDecimal.ZERO;
+    BigDecimal negativeAmount = new BigDecimal("-1000");
+
+    // 2. Act & Assert untuk angka NOL
+    assertThrows(IllegalArgumentException.class, () -> {
+        loanService.createLoan(borrower, zeroAmount);
+    }, "Harusnya error saat jumlah pinjaman 0");
+
+    // 3. Act & Assert untuk angka NEGATIF
+    assertThrows(IllegalArgumentException.class, () -> {
+        loanService.createLoan(borrower, negativeAmount);
+    }, "Harusnya error saat jumlah pinjaman negatif");
+}
+
+@Test
+void shouldApproveLoanWhenCreditScoreHigh(){
+    // 1. Arrange
+    Borrower borrower = new Borrower(true, 750); // Verified dan credit score tinggi
+    LoanService loanService = new LoanService();
+    BigDecimal amount = BigDecimal.valueOf(1000);
+
+    // 2. Act
+    var loan = loanService.createLoan(borrower, amount);
+
+    // 3. Assert
+    assertEquals("APPROVED", loan.getStatus().name(), "Loan harus disetujui untuk credit score tinggi");
+}
+
+}

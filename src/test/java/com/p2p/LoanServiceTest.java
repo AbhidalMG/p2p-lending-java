@@ -2,6 +2,7 @@ package com.p2p;
 import org.junit.jupiter.api.Test;
 
 import com.p2p.domain.Borrower;
+import com.p2p.domain.Loan;
 import com.p2p.service.LoanService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,7 +34,6 @@ BigDecimal amount = BigDecimal.valueOf(1000);
 // Act & Assert (Action & Expected Result)
 // =========================
 
-// Kita mengetes bahwa pemanggilan method ini HARUS menghasilkan IllegalArgumentException
 assertThrows(IllegalArgumentException.class, () -> {
     loanService.createLoan(borrower, amount);
 }, "Harusnya melempar IllegalArgumentException karena borrower belum verified");
@@ -72,6 +72,23 @@ void shouldApproveLoanWhenCreditScoreHigh(){
 
     // 3. Assert
     assertEquals("APPROVED", loan.getStatus().name(), "Loan harus disetujui untuk credit score tinggi");
+}
+
+@Test
+void shouldRejectLoanWhenCreditScoreLow() {
+    // 1. Arrange (Siapkan data)
+    // Borrower: Verified = true, tapi Credit Score = 500 (di bawah threshold 600)
+    Borrower borrower = new Borrower(true, 500); 
+    LoanService loanService = new LoanService();
+    BigDecimal amount = new BigDecimal("2000");
+
+    // 2. Act (Jalankan aksi)
+    Loan result = loanService.createLoan(borrower, amount);
+
+    // 3. Assert (Pastikan hasil sesuai ekspektasi)
+    assertNotNull(result, "Objek loan harusnya berhasil dibuat");
+    assertEquals(Loan.Status.REJECTED, result.getStatus(), 
+                 "Seharusnya status loan REJECTED karena credit score rendah");
 }
 
 }

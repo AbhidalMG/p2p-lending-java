@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 public class LoanServiceTest {
      @Test
 void shouldRejectLoanWhenBorrowerNotVerified() {
-
-    // =====================================================
+//TC-01: shouldRejectLoanWhenBorrowerNotVerified
+// =====================================================
 // SCENARIO:
 // Borrower tidak terverifikasi (KYC = false)
 // Ketika borrower mengajukan pinjaman
@@ -39,29 +39,42 @@ assertThrows(IllegalArgumentException.class, () -> {
 }, "Harusnya melempar IllegalArgumentException karena borrower belum verified");
 }
 
+//TC-02: shouldRejectLoanWhenAmountIsZeroOrNegative
 @Test
 void shouldRejectLoanWhenAmountIsZeroOrNegative() {
-    // 1. Arrange
-    // Borrower valid (Verified = true) agar tidak kena cegat di validasi pertama
+//=====================================================
+// SCENARIO:
+// Borrower terverifikasi (KYC = true) dengan credit score tinggi
+// Ketika borrower mengajukan pinjaman dengan jumlah 0 atau negatif
+// Maka sistem harus menolak dengan melempar exception
     Borrower borrower = new Borrower(true, 750); 
     LoanService loanService = new LoanService();
-    
+
+// 1. Arrange untuk angka NOL dan NEGATIF    
     BigDecimal zeroAmount = BigDecimal.ZERO;
     BigDecimal negativeAmount = new BigDecimal("-1000");
 
-    // 2. Act & Assert untuk angka NOL
+ // 2. Act & Assert untuk angka NOL
     assertThrows(IllegalArgumentException.class, () -> {
         loanService.createLoan(borrower, zeroAmount);
     }, "Harusnya error saat jumlah pinjaman 0");
 
-    // 3. Act & Assert untuk angka NEGATIF
+// 3. Act & Assert untuk angka NEGATIF
     assertThrows(IllegalArgumentException.class, () -> {
         loanService.createLoan(borrower, negativeAmount);
     }, "Harusnya error saat jumlah pinjaman negatif");
 }
 
 @Test
+//TC-03: shouldApproveLoanWhenCreditScoreHigh
 void shouldApproveLoanWhenCreditScoreHigh(){
+    // =====================================================
+    // SCENARIO:
+    // Borrower terverifikasi (KYC = true) dengan credit score tinggi (misal 750)
+    // Ketika borrower mengajukan pinjaman dengan jumlah valid
+    // Maka sistem harus menyetujui pinjaman tersebut
+    // =====================================================
+
     // 1. Arrange
     Borrower borrower = new Borrower(true, 750); // Verified dan credit score tinggi
     LoanService loanService = new LoanService();
@@ -75,9 +88,16 @@ void shouldApproveLoanWhenCreditScoreHigh(){
 }
 
 @Test
+//TC-04: shouldRejectLoanWhenCreditScoreLow
 void shouldRejectLoanWhenCreditScoreLow() {
-    // 1. Arrange (Siapkan data)
-    // Borrower: Verified = true, tapi Credit Score = 500 (di bawah threshold 600)
+    // =====================================================
+    // SCENARIO:
+    // Borrower terverifikasi (KYC = true) dengan credit score rendah (misal 500)
+    // Ketika borrower mengajukan pinjaman dengan jumlah valid
+    // Maka sistem harus menolak pinjaman tersebut
+    // =====================================================
+
+    //1. Arrange
     Borrower borrower = new Borrower(true, 500); 
     LoanService loanService = new LoanService();
     BigDecimal amount = new BigDecimal("2000");

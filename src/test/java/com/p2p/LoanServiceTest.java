@@ -1,114 +1,61 @@
 package com.p2p;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
-
-import com.p2p.domain.Borrower;
-import com.p2p.domain.Loan;
+import com.p2p.domain.*;
 import com.p2p.service.LoanService;
-
 import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
+
 public class LoanServiceTest {
-     @Test
-void shouldRejectLoanWhenBorrowerNotVerified() {
-//TC-01: shouldRejectLoanWhenBorrowerNotVerified
-// =====================================================
-// SCENARIO:
-// Borrower tidak terverifikasi (KYC = false)
-// Ketika borrower mengajukan pinjaman
-// Maka sistem harus menolak dengan melempar exception
-// =====================================================
+    private static final Logger logger = LogManager.getLogger(LoanServiceTest.class);
+    private final LoanService loanService = new LoanService();
 
-// =========================
-// Arrange (Initial Condition)
-// =========================
-// Borrower belum lolos proses KYC
-Borrower borrower = new Borrower(false, 700);
+    @Test
+    void shouldRejectLoanWhenBorrowerNotVerified() {
+        logger.info("Menjalankan TC-01: Verifikasi KYC.");
+        Borrower borrower = new Borrower(false, 700);
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            loanService.createLoan(borrower, BigDecimal.valueOf(1000));
+        });
+        logger.debug("TC-01 berhasil melewati pengecekan exception.");
+    }
 
-// Service untuk pengajuan loan
-LoanService loanService = new LoanService();
+    // TC-02
+    @Test
+    void shouldRejectLoanWhenAmountIsZeroOrNegative() {
+        logger.info("Menjalankan TC-02: Validasi Jumlah Pinjaman.");
+        Borrower borrower = new Borrower(true, 700);
 
-// Jumlah pinjaman valid
-BigDecimal amount = BigDecimal.valueOf(1000);
+        assertThrows(IllegalArgumentException.class, () -> {
+            loanService.createLoan(borrower, BigDecimal.ZERO);
+        });
+        logger.debug("TC-02 berhasil menolak angka nol.");
+    }
 
-// =========================
-// Act & Assert (Action & Expected Result)
-// =========================
+    //TC-03
+   @Test
+    void shouldApproveLoanWhenCreditScoreHigh() {
+        logger.info("Menjalankan TC-03: Skenario Skor Kredit Tinggi.");
+        Borrower borrower = new Borrower(true, 750);
+        
+        Loan result = loanService.createLoan(borrower, BigDecimal.valueOf(5000));
+        
+        assertEquals(Loan.Status.APPROVED, result.getStatus());
+        logger.info("TC-03 Selesai: Status adalah APPROVED.");
+    }
 
-assertThrows(IllegalArgumentException.class, () -> {
-    loanService.createLoan(borrower, amount);
-}, "Harusnya melempar IllegalArgumentException karena borrower belum verified");
-}
-
-//TC-02: shouldRejectLoanWhenAmountIsZeroOrNegative
-@Test
-void shouldRejectLoanWhenAmountIsZeroOrNegative() {
-//=====================================================
-// SCENARIO:
-// Borrower terverifikasi (KYC = true) dengan credit score tinggi
-// Ketika borrower mengajukan pinjaman dengan jumlah 0 atau negatif
-// Maka sistem harus menolak dengan melempar exception
-    Borrower borrower = new Borrower(true, 750); 
-    LoanService loanService = new LoanService();
-
-// 1. Arrange untuk angka NOL dan NEGATIF    
-    BigDecimal zeroAmount = BigDecimal.ZERO;
-    BigDecimal negativeAmount = new BigDecimal("-1000");
-
- // 2. Act & Assert untuk angka NOL
-    assertThrows(IllegalArgumentException.class, () -> {
-        loanService.createLoan(borrower, zeroAmount);
-    }, "Harusnya error saat jumlah pinjaman 0");
-
-// 3. Act & Assert untuk angka NEGATIF
-    assertThrows(IllegalArgumentException.class, () -> {
-        loanService.createLoan(borrower, negativeAmount);
-    }, "Harusnya error saat jumlah pinjaman negatif");
-}
-
-@Test
-//TC-03: shouldApproveLoanWhenCreditScoreHigh
-void shouldApproveLoanWhenCreditScoreHigh(){
-    // =====================================================
-    // SCENARIO:
-    // Borrower terverifikasi (KYC = true) dengan credit score tinggi (misal 750)
-    // Ketika borrower mengajukan pinjaman dengan jumlah valid
-    // Maka sistem harus menyetujui pinjaman tersebut
-    // =====================================================
-
-    // 1. Arrange
-    Borrower borrower = new Borrower(true, 750); // Verified dan credit score tinggi
-    LoanService loanService = new LoanService();
-    BigDecimal amount = BigDecimal.valueOf(1000);
-
-    // 2. Act
-    var loan = loanService.createLoan(borrower, amount);
-
-    // 3. Assert
-    assertEquals("APPROVED", loan.getStatus().name(), "Loan harus disetujui untuk credit score tinggi");
-}
-
-@Test
-//TC-04: shouldRejectLoanWhenCreditScoreLow
-void shouldRejectLoanWhenCreditScoreLow() {
-    // =====================================================
-    // SCENARIO:
-    // Borrower terverifikasi (KYC = true) dengan credit score rendah (misal 500)
-    // Ketika borrower mengajukan pinjaman dengan jumlah valid
-    // Maka sistem harus menolak pinjaman tersebut
-    // =====================================================
-
-    //1. Arrange
-    Borrower borrower = new Borrower(true, 500); 
-    LoanService loanService = new LoanService();
-    BigDecimal amount = new BigDecimal("2000");
-
-    // 2. Act (Jalankan aksi)
-    Loan result = loanService.createLoan(borrower, amount);
-
-    // 3. Assert (Pastikan hasil sesuai ekspektasi)
-    assertNotNull(result, "Objek loan harusnya berhasil dibuat");
-    assertEquals(Loan.Status.REJECTED, result.getStatus(), 
-                 "Seharusnya status loan REJECTED karena credit score rendah");
-}
-
+   //TC-04
+    @Test
+    void shouldRejectLoanWhenCreditScoreLow() {
+        logger.info("Menjalankan TC-04: Skenario Credit Score Rendah.");
+        Borrower borrower = new Borrower(true, 500);
+        
+        Loan result = loanService.createLoan(borrower, BigDecimal.valueOf(2000));
+        
+        assertEquals(Loan.Status.REJECTED, result.getStatus());
+        logger.info("TC-04 Selesai: Status adalah REJECTED.");
+    }
 }

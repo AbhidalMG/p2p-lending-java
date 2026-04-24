@@ -28,7 +28,7 @@ public class Loan {
     public void approve() {
         this.status = Status.APPROVED;
     }
- public void reject() {
+    public void reject() {
         this.status = Status.REJECTED;
     }
 
